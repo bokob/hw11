@@ -1,47 +1,87 @@
 #include <stdio.h>
 #include <stdlib.h>
+#define TRUE 1
+#define FALSE 0 
 
 #define MAX_VERTEX 10
-#define MAX_QUEUE_SIZE 100
-#define MAX_STACL_SIZE 100
 
 int remember_v[MAX_VERTEX]; // 추가한 정점들을 기억하기 위한 배열
 
-typedef struct graphNode{
-    int vertex;
-    struct graphNode* link;
-}graphNode;
+int visited[MAX_VERTEX];
+ 
+typedef struct GraphNode{
+	int vertex;
+	struct GraphNode *link;
+}GraphNode;
 
-typedef struct graphType{
-    int n;                              // 그래프의 정점의 개수
-    int vertex[MAX_VERTEX];
-    graphNode* adjList_H[MAX_VERTEX];
-}graphType;
+typedef struct GraphType{
+	int n; // 정점의개수    
+	GraphNode *adj_list[MAX_VERTEX];
+}GraphType;
 
-typedef struct{
-    int queue[MAX_QUEUE_SIZE];
-    int front,rear;
+typedef struct QueueType{
+	int element[MAX_VERTEX];
+	int front, rear;
+	int size;
 }QueueType;
 
-typedef struct{
-    int stack[MAX_STACL_SIZE];
-    int top;
-}StackType;
+void initQueue(QueueType *q);
+void enqueue(QueueType *q, int item);
+int dequeue(QueueType *q);
 
+void initialize_graph(GraphType **g);
+void dfs(GraphType *g, int v);
 
-void initializeGraph(graphType** g);
-void insertVertex(graphType* g, int v);
-void insertEdge(graphType* g, int u, int v);
-void print_adjList(graphType *g);
+void insert_vertex(GraphType *g, int v);
+void insert_edge(GraphType *g, int u, int v);
+void bfs(GraphType *g, int v);
+void print_adlist(GraphType *g);
 
-int main()
-{   
+int main(){
+
+    /*
+	
+	int i;
+	GraphType g;
+	graph_init(&g);
+	for(i = 0; i<6;i++){
+		insert_vertex(&g, i);
+	}
+	
+	insert_edge(&g,0,1);
+	insert_edge(&g,1,0);
+	insert_edge(&g,0,5);
+	insert_edge(&g,5,0);
+	insert_edge(&g,1,2);
+	insert_edge(&g,2,1);
+	insert_edge(&g,2,3);
+	insert_edge(&g,3,2);
+	insert_edge(&g,3,4);
+	insert_edge(&g,4,3);
+	insert_edge(&g,2,5);
+	insert_edge(&g,5,2);
+	
+    DFS(&g,1);
+    for(int i=0; i<MAX_VERTICSES; i++)
+    {
+        visited[i]=0;
+    }
+    printf("\n");
+    BFS(&g,2);
+	
+	
+	for(int i = 0 ; i<7;i++){
+	print_adlist(&g,i);	
+	}
+    */
+
    char command;
    int vertex;
    int u,v;
-   int flag=0;
+   int initflag=0;
+   int search_start;
 
-   graphType *g=(graphType*)malloc(sizeof(graphType));
+   GraphType *g=(GraphType*)malloc(sizeof(GraphType));
 
    do{
         printf("\n\n");
@@ -57,54 +97,78 @@ int main()
 		printf("Command = ");
 		scanf(" %c", &command);
 
+        int search_flag=0;
+
         switch(command){
             case 'z': case 'Z':
-                initializeGraph(&g);
-                flag=1;
+                initialize_graph(&g);
+                initflag=1;
                 break;
             case 'v': case 'V':
-                if(flag == 0)
+                if(initflag == 0)
                 {
                     printf("Initialize Graph를 실행해주세요!\n");
                     break;
                 }
                 printf("어떤 정점을 추가할 것인가요?(0 ~ 9까지의 정점만 가능) ");
                 scanf("%d", &vertex);
-                insertVertex(g,vertex);
+                insert_vertex(g,vertex);
                 break;
             case 'e': case 'E':
-                if(flag == 0)
+                if(initflag == 0)
                 {
                     printf("Initialize Graph를 실행해주세요!\n");
                     break;
                 }
                 printf("어떤 정점을 연결할 것인가요? ");
                 scanf("%d %d", &u, &v);
-                insertEdge(g,u,v);
+                insert_edge(g,u,v);
                 break;
             case 'd': case 'D':
-                if(flag == 0)
+                if(initflag == 0)
                 {
                     printf("Initialize Graph를 실행해주세요!\n");
                     break;
                 }
-                //DFS();
+                printf("DFS를 시작할 정점을 입력하세요. ");
+                scanf("%d", &search_start);
+                for(int i=0;i<MAX_VERTEX;i++)
+                {
+                    if(search_start == remember_v[i])
+                    {
+                        search_flag=1;
+                    }
+                }
+                if(search_flag == 0)
+                    break;
+                dfs(g,1);
                 break;
             case 'b': case'B':
-                if(flag == 0)
+                if(initflag == 0)
                 {
                     printf("Initialize Graph를 실행해주세요!\n");
                     break;
                 }
-                //BFS();
+                printf("BFS를 시작할 정점을 입력하세요. ");
+                scanf("%d", &search_start);
+                for(int i=0;i<MAX_VERTEX;i++)
+                {
+                    if(search_start == remember_v[i])
+                    {
+                        search_flag=1;
+                    }
+                }
+                if(search_flag == 0)
+                    break;
+                bfs(g,1);
                 break;
             case 'p': case 'P':
-                if(flag == 0)
+                if(initflag == 0)
                 {
                     printf("Initialize Graph를 실행해주세요!\n");
                     break;
                 }
-                print_adjList(g);
+                print_adlist(g);
                 break;
             case 'q': case 'Q':
                 free(g);
@@ -116,18 +180,36 @@ int main()
     }while(command != 'q' && command != 'Q');
 
     return 0; 
-    
 }
 
-void initializeGraph(graphType** g)
-{
-    (*g)->n=0;
-    for(int v=0; v<MAX_VERTEX;v++)
-        (*g)->adjList_H[v]=NULL;
+void initQueue(QueueType *q){
+	q->size = 0 ;
+	q->front = -1;
+	q->rear = -1;
+	for(int i =0; i<MAX_VERTEX; i++)
+		q->element[i] = 0 ;
 }
 
-void insertVertex(graphType* g, int v)
-{
+void enqueue(QueueType *q, int item){
+	q->element[ ++(q->rear) ] = item;
+	q->size++ ;
+}
+
+int dequeue(QueueType *q){
+	int item;
+	item = q->element[++(q->front)];
+	q->size--;
+	return item;
+}
+
+void initialize_graph(GraphType** g)
+{	
+	(*g)->n = 0;
+	for(int v=0; v<MAX_VERTEX; v++)
+		(*g)->adj_list[v] = NULL;	
+}
+
+void insert_vertex(GraphType *g, int v){
 
     if(v<0 || 9<v)
     {       
@@ -140,13 +222,21 @@ void insertVertex(graphType* g, int v)
         printf("그래프 정점의 개수를 초과!\n");
         return;
     }
+    for(int i=0; i<MAX_VERTEX;i++)
+    {
+        if(v == remember_v[i])
+        {
+            printf("이미 추가된 정점입니다!\n");
+            return;
+        }
+    }
     remember_v[g->n] = v;
-    g->n++;
-}
+	g->n++;
+} 
 
-void insertEdge(graphType* g, int u, int v)
-{
-    graphNode* node;
+void insert_edge(GraphType *g, int u, int v){
+	GraphNode *node;
+
     int temp1=-1;       // 정점 u가 있는지 판별하기 위한 변수
     int temp2=-1;       // 정점 v가 있는지 판별하기 위한 변수
 
@@ -168,19 +258,48 @@ void insertEdge(graphType* g, int u, int v)
         return;
     }
 
-    node=(graphNode*)malloc(sizeof(graphNode));
-    node->vertex=remember_v[temp2];
-    node->link=g->adjList_H[remember_v[temp1]]; // 삽입 간선에 대한 노드를 첫 번째 노드로 연결
-    g->adjList_H[remember_v[temp1]] = node;
+	node = (GraphNode*)malloc(sizeof(GraphNode));
+	node->vertex = remember_v[temp2];
+	node->link = g->adj_list[remember_v[temp1]];
+	g->adj_list[remember_v[temp1]] = node; 
 }
 
-void print_adjList(graphType *g)
-{
-    graphNode* p;
-    for(int i=0; i< g->n; i++)
+void dfs(GraphType *g, int v){
+	GraphNode *w;
+	visited[v] = 1;
+	printf("%d ", v);
+	for(w = g->adj_list[v]; w; w = w->link){
+		if(!visited[w->vertex]){
+			dfs(g,w->vertex);	
+		}
+	}
+}
+
+void bfs(GraphType *g, int v){
+	GraphNode *w;
+	QueueType q;
+	initQueue(&q);
+	visited[v] = TRUE;
+	printf("%d ",v);
+	enqueue(&q, v);
+	while(q.size != 0){
+		v = dequeue(&q);
+		for(w =g->adj_list[v]; w; w= w->link)
+			if(!visited[w->vertex]){
+				visited[w->vertex] = TRUE;
+				printf("%d ",w->vertex);
+				enqueue(&q, w->vertex);
+			}
+	}
+}
+
+void print_adlist(GraphType *g){
+	GraphNode *p;
+	
+   for(int i=0; i< g->n; i++)
     {
         printf("\n\t\t정점 %d의 인접 리스트", remember_v[i]);
-        p=g->adjList_H[remember_v[i]];
+        p=g->adj_list[remember_v[i]];
 
         while(p)
         {
