@@ -5,7 +5,7 @@
 
 #define MAX_VERTEX 10
 
-int remember_v[MAX_VERTEX]; // 추가한 정점들을 기억하기 위한 배열
+int remember_v[MAX_VERTEX]; // 추가한 정점들을 기억하기 위한 배열. 자신이 추가한 정점과 인접리스트만 출력되게 하기 위해 쓰일 배열이다.
 
 int visited[MAX_VERTEX];
  
@@ -37,44 +37,10 @@ void insert_edge(GraphType *g, int u, int v);
 void bfs(GraphType *g, int v);
 void print_adlist(GraphType *g);
 
-int main(){
+int insertList(GraphType *g, int x);
 
-    /*
-	
-	int i;
-	GraphType g;
-	graph_init(&g);
-	for(i = 0; i<6;i++){
-		insert_vertex(&g, i);
-	}
-	
-	insert_edge(&g,0,1);
-	insert_edge(&g,1,0);
-	insert_edge(&g,0,5);
-	insert_edge(&g,5,0);
-	insert_edge(&g,1,2);
-	insert_edge(&g,2,1);
-	insert_edge(&g,2,3);
-	insert_edge(&g,3,2);
-	insert_edge(&g,3,4);
-	insert_edge(&g,4,3);
-	insert_edge(&g,2,5);
-	insert_edge(&g,5,2);
-	
-    DFS(&g,1);
-    for(int i=0; i<MAX_VERTICSES; i++)
-    {
-        visited[i]=0;
-    }
-    printf("\n");
-    BFS(&g,2);
-	
-	
-	for(int i = 0 ; i<7;i++){
-	print_adlist(&g,i);	
-	}
-    */
-
+int main()
+{
    char command;
    int vertex;
    int u,v;
@@ -140,8 +106,15 @@ int main(){
                     }
                 }
                 if(search_flag == 0)
+                {
+                    printf("시작할 수 없는 정점입니다!\n");
                     break;
-                dfs(g,1);
+                }
+                dfs(g,search_start);
+                for(int i=0; i<MAX_VERTEX; i++)
+                {
+                    visited[i]=FALSE;
+                }
                 break;
             case 'b': case'B':
                 if(initflag == 0)
@@ -159,8 +132,15 @@ int main(){
                     }
                 }
                 if(search_flag == 0)
+                {   
+                    printf("시작할 수 없는 정점입니다!\n");
                     break;
-                bfs(g,1);
+                }
+                bfs(g,search_start);
+                for(int i=0; i<MAX_VERTEX; i++)
+                {
+                    visited[i]=FALSE;
+                }
                 break;
             case 'p': case 'P':
                 if(initflag == 0)
@@ -206,7 +186,10 @@ void initialize_graph(GraphType** g)
 {	
 	(*g)->n = 0;
 	for(int v=0; v<MAX_VERTEX; v++)
-		(*g)->adj_list[v] = NULL;	
+    {
+		(*g)->adj_list[v] = NULL;
+        remember_v[v]=-1;
+    }
 }
 
 void insert_vertex(GraphType *g, int v){
@@ -254,13 +237,16 @@ void insert_edge(GraphType *g, int u, int v){
 
     if(temp1 == -1 || temp2 == -1)      // 정점 u 또는 v가 존재하지 않는다면
     {
-        printf("그래프에 존재하지 않는 정점!"); // 그래프에 존재하지 않는다는 문구 출력
+        printf("그래프에 존재하지 않는 정점!\n"); // 그래프에 존재하지 않는다는 문구 출력
         return;
     }
 
 	node = (GraphNode*)malloc(sizeof(GraphNode));
+
 	node->vertex = remember_v[temp2];
+
 	node->link = g->adj_list[remember_v[temp1]];
+
 	g->adj_list[remember_v[temp1]] = node; 
 }
 
@@ -296,6 +282,14 @@ void bfs(GraphType *g, int v){
 void print_adlist(GraphType *g){
 	GraphNode *p;
 	
+    if(remember_v[0] == -1)
+    {
+        printf("출력할 것이 없습니다!\n");
+        return;
+    }
+
+    
+
    for(int i=0; i< g->n; i++)
     {
         printf("\n\t\t정점 %d의 인접 리스트", remember_v[i]);
@@ -309,3 +303,15 @@ void print_adlist(GraphType *g){
         printf("\n");
     }
 }
+
+/*
+int insertList(GraphType *g, int x)
+{
+    GraphNode *node = (GraphNode*)malloc(sizeof(GraphNode));
+
+    node->vertex=key;
+    node->link=NULL;
+
+    if(g->adj_list)
+}
+*/
