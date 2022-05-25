@@ -9,29 +9,32 @@ int remember_v[MAX_VERTEX]; // 추가한 정점들을 기억하기 위한 배열. 자신이 추가한
 
 int visited[MAX_VERTEX];
  
-typedef struct GraphNode{
+typedef struct GraphNode
+{
 	int vertex;
 	struct GraphNode *link;
 }GraphNode;
 
-typedef struct GraphType{
+typedef struct GraphType
+{
 	int n; // 정점의개수    
 	GraphNode *adj_list[MAX_VERTEX];
 }GraphType;
 
-typedef struct QueueType{
+typedef struct QueueType
+{
 	int element[MAX_VERTEX];
 	int front, rear;
-	int size;
 }QueueType;
 
 void initQueue(QueueType *q);
+int is_emmpty(QueueType* q);
+int is_full(QueueType *q);
 void enqueue(QueueType *q, int item);
 int dequeue(QueueType *q);
 
 void initialize_graph(GraphType **g);
 void dfs(GraphType *g, int v);
-
 void insert_vertex(GraphType *g, int v);
 void insert_edge(GraphType *g, int u, int v);
 void bfs(GraphType *g, int v);
@@ -44,11 +47,13 @@ int main()
    char command;
    int vertex;
    int u,v;
-   int initflag=0;
+   int initflag=FALSE;
    int search_start;
 
    GraphType *g=(GraphType*)malloc(sizeof(GraphType));
 
+   printf("[-------------------- [복무창] [2021040021] --------------------]");
+   
    do{
         printf("\n\n");
 		printf("----------------------------------------------------------------\n");
@@ -63,7 +68,7 @@ int main()
 		printf("Command = ");
 		scanf(" %c", &command);
 
-        int search_flag=0;
+        int search_flag=FALSE;
 
         switch(command){
             case 'z': case 'Z':
@@ -71,7 +76,7 @@ int main()
                 initflag=1;
                 break;
             case 'v': case 'V':
-                if(initflag == 0)
+                if(initflag == FALSE)
                 {
                     printf("Initialize Graph를 실행해주세요!\n");
                     break;
@@ -81,7 +86,7 @@ int main()
                 insert_vertex(g,vertex);
                 break;
             case 'e': case 'E':
-                if(initflag == 0)
+                if(initflag == FALSE)
                 {
                     printf("Initialize Graph를 실행해주세요!\n");
                     break;
@@ -91,7 +96,7 @@ int main()
                 insert_edge(g,u,v);
                 break;
             case 'd': case 'D':
-                if(initflag == 0)
+                if(initflag == FALSE)
                 {
                     printf("Initialize Graph를 실행해주세요!\n");
                     break;
@@ -102,10 +107,10 @@ int main()
                 {
                     if(search_start == remember_v[i])
                     {
-                        search_flag=1;
+                        search_flag=TRUE;
                     }
                 }
-                if(search_flag == 0)
+                if(search_flag == FALSE)
                 {
                     printf("시작할 수 없는 정점입니다!\n");
                     break;
@@ -117,7 +122,7 @@ int main()
                 }
                 break;
             case 'b': case'B':
-                if(initflag == 0)
+                if(initflag == FALSE)
                 {
                     printf("Initialize Graph를 실행해주세요!\n");
                     break;
@@ -128,10 +133,10 @@ int main()
                 {
                     if(search_start == remember_v[i])
                     {
-                        search_flag=1;
+                        search_flag=TRUE;
                     }
                 }
-                if(search_flag == 0)
+                if(search_flag == FALSE)
                 {   
                     printf("시작할 수 없는 정점입니다!\n");
                     break;
@@ -143,7 +148,7 @@ int main()
                 }
                 break;
             case 'p': case 'P':
-                if(initflag == 0)
+                if(initflag == FALSE)
                 {
                     printf("Initialize Graph를 실행해주세요!\n");
                     break;
@@ -162,24 +167,44 @@ int main()
     return 0; 
 }
 
-void initQueue(QueueType *q){
-	q->size = 0 ;
-	q->front = -1;
-	q->rear = -1;
-	for(int i =0; i<MAX_VERTEX; i++)
-		q->element[i] = 0 ;
+void initQueue(QueueType *q)
+{
+	q->front = q->rear = 0;
 }
 
-void enqueue(QueueType *q, int item){
-	q->element[ ++(q->rear) ] = item;
-	q->size++ ;
+int is_empty(QueueType* q)  //공백 상태 검출 함수 
+{
+	return (q->front == q->rear);
 }
 
-int dequeue(QueueType *q){
-	int item;
-	item = q->element[++(q->front)];
-	q->size--;
-	return item;
+int is_full(QueueType* q)   //포화 상태 검출 함수 
+{
+	return ((q->rear + 1) % MAX_VERTEX == q->front);
+}
+
+
+void enqueue(QueueType *q, int item)
+{
+	if (is_full(q)) {
+		fprintf(stderr,"큐가 가득참!\n");
+        return;
+	}
+	else
+		q->rear = (q->rear + 1) % MAX_VERTEX;
+	
+    q->element[q->rear] = item;
+}
+
+int dequeue(QueueType *q)
+{
+	if (is_empty(q)) 
+    {
+		fprintf(stderr,"큐가 비었음!\n");
+	}
+	else
+		q->front = (q->front + 1) % MAX_VERTEX;
+	
+    return q->element[q->front];
 }
 
 void initialize_graph(GraphType** g)
@@ -188,11 +213,12 @@ void initialize_graph(GraphType** g)
 	for(int v=0; v<MAX_VERTEX; v++)
     {
 		(*g)->adj_list[v] = NULL;
-        remember_v[v]=-1;
+        remember_v[v] = -1;
     }
 }
 
-void insert_vertex(GraphType *g, int v){
+void insert_vertex(GraphType *g, int v)
+{
 
     if(v<0 || 9<v)
     {       
@@ -217,8 +243,12 @@ void insert_vertex(GraphType *g, int v){
 	g->n++;
 } 
 
-void insert_edge(GraphType *g, int u, int v){
-	GraphNode *node;
+void insert_edge(GraphType *g, int u, int v)
+{ 
+	GraphNode* node; 
+	GraphNode* p = g->adj_list[u];
+	GraphNode* pre = NULL;
+	int flag = 0;
 
     int temp1=-1;       // 정점 u가 있는지 판별하기 위한 변수
     int temp2=-1;       // 정점 v가 있는지 판별하기 위한 변수
@@ -237,22 +267,56 @@ void insert_edge(GraphType *g, int u, int v){
 
     if(temp1 == -1 || temp2 == -1)      // 정점 u 또는 v가 존재하지 않는다면
     {
-        printf("그래프에 존재하지 않는 정점!\n"); // 그래프에 존재하지 않는다는 문구 출력
+        printf("그래프에 존재하지 않는 정점!"); // 그래프에 존재하지 않는다는 문구 출력
         return;
     }
-
+	
 	node = (GraphNode*)malloc(sizeof(GraphNode));
-
 	node->vertex = remember_v[temp2];
 
-	node->link = g->adj_list[remember_v[temp1]];
-
-	g->adj_list[remember_v[temp1]] = node; 
+	if (g->adj_list[u] == NULL) //처음 insert 
+    {
+		node->link = g->adj_list[remember_v[temp1]];
+	    g->adj_list[remember_v[temp1]] = node; 
+	}
+	else
+    {
+		while (p != NULL) 
+        {
+			if (p->vertex > node->vertex) 
+            {
+				flag = 1;				
+				break;
+			}
+			pre = p;
+			p = p->link;
+			
+		}
+		if (flag == 1)  //중간에 삽입해야함 
+        {
+			
+			if (p == g->adj_list[u]) {
+				node->link = g->adj_list[remember_v[temp1]];
+	            g->adj_list[remember_v[temp1]] = node; 
+			}
+			else 
+            {
+				node->link = p;
+				pre->link = node;
+			}
+		}
+		else 
+        {
+			node->link = NULL;
+			pre->link = node;
+		}
+	}
 }
 
-void dfs(GraphType *g, int v){
+void dfs(GraphType *g, int v)
+{
 	GraphNode *w;
-	visited[v] = 1;
+	visited[v] = TRUE;
 	printf("%d ", v);
 	for(w = g->adj_list[v]; w; w = w->link){
 		if(!visited[w->vertex]){
@@ -261,17 +325,23 @@ void dfs(GraphType *g, int v){
 	}
 }
 
-void bfs(GraphType *g, int v){
+void bfs(GraphType *g, int v)
+{
 	GraphNode *w;
 	QueueType q;
+
 	initQueue(&q);
+
 	visited[v] = TRUE;
+
 	printf("%d ",v);
 	enqueue(&q, v);
-	while(q.size != 0){
+	while(!is_empty(&q))
+    {
 		v = dequeue(&q);
 		for(w =g->adj_list[v]; w; w= w->link)
-			if(!visited[w->vertex]){
+			if(!visited[w->vertex])
+            {
 				visited[w->vertex] = TRUE;
 				printf("%d ",w->vertex);
 				enqueue(&q, w->vertex);
@@ -279,7 +349,8 @@ void bfs(GraphType *g, int v){
 	}
 }
 
-void print_adlist(GraphType *g){
+void print_adlist(GraphType *g)
+{
 	GraphNode *p;
 	
     if(remember_v[0] == -1)
@@ -287,8 +358,6 @@ void print_adlist(GraphType *g){
         printf("출력할 것이 없습니다!\n");
         return;
     }
-
-    
 
    for(int i=0; i< g->n; i++)
     {
@@ -303,15 +372,3 @@ void print_adlist(GraphType *g){
         printf("\n");
     }
 }
-
-/*
-int insertList(GraphType *g, int x)
-{
-    GraphNode *node = (GraphNode*)malloc(sizeof(GraphNode));
-
-    node->vertex=key;
-    node->link=NULL;
-
-    if(g->adj_list)
-}
-*/
