@@ -324,7 +324,7 @@ void insert_edge(GraphType *g, int u, int v) // 그래프의 정점 u와 v의 간선 생성
     else /* g가 가리키는 곳의 adj_list[u]의 값이 NULL이 아닌 경우
     즉, 정점 u에 인접리스트가 존재하는 경우 */
     {
-        while (p != NULL) // p가 NULL이 아닐 때까지 반보
+        while (p != NULL) // p가 NULL이 아닐 때까지 반복
         {
             if (p->vertex > node->vertex)
             // p가 가리키는 곳의 vertex가 node가 가리키는 곳의 vertex보다 큰 경우
@@ -445,19 +445,19 @@ void free_graph(GraphType *g) // 그래프 초기화
 {
     for (int i = 0; i < MAX_VERTEX; i++) // MAX_VERTEX 크기만큼 반복
     {
-        GraphNode *curr=g->adj_list[i];
-        GraphNode *prev=NULL;
-        if (g->adj_list[i] != NULL) 
+        GraphNode *p = g->adj_list[i];   
+        // GraphNode에 대한 포인터 p에 g가 가리키는 곳의 adj_list[i]에 들어있는 값을 넣는다.
+        GraphNode *prev = NULL;         // GraphNode에 대한 포인터 prev에 NULL을 넣는다.  
+        if (g->adj_list[i] != NULL)
         /* g가 가리키는 곳의 adj_list[i]가 NULL이 아닌 경우 즉, 인접리스트가 존재하는 경우다. */
         {
-            while(curr != NULL)
+            while (p != NULL)   // p가 NULL일 때까지 반복
             {
-                prev = curr;
-                curr = curr->link;
-                free(prev);
-                printf("해제완료!\n");
+                prev = p;       // prev에 p에 들어있는 주소를 넣는다.
+                p = p->link;    // p에 p가 가리키는 곳의 link에 들어있는 주소를 넣는다.
+                free(prev);     // prev를 해제한다.
             }
-        } 
+        }
     }
     free(g); // 그래프 g 해제
 }
