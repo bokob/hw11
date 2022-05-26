@@ -443,13 +443,21 @@ void print_adlist(GraphType *g) // 그래프의 인접리스트 출력
 
 void free_graph(GraphType *g) // 그래프 초기화
 {
-    GraphType *p = g; // GraphType에 대한 포인터 p에 g에 들어있는 주소를 넣는다.
-
     for (int i = 0; i < MAX_VERTEX; i++) // MAX_VERTEX 크기만큼 반복
     {
-        if (p->adj_list[i] != NULL) /* p가 가리키는 곳의 adj_list[i]가 NULL이 아닌 경우
-        즉, 인접리스트가 존재하는 경우다. */
-            free(p->adj_list[i]);   // 인접리스트 해제
+        GraphNode *curr=g->adj_list[i];
+        GraphNode *prev=NULL;
+        if (g->adj_list[i] != NULL) 
+        /* g가 가리키는 곳의 adj_list[i]가 NULL이 아닌 경우 즉, 인접리스트가 존재하는 경우다. */
+        {
+            while(curr != NULL)
+            {
+                prev = curr;
+                curr = curr->link;
+                free(prev);
+                printf("해제완료!\n");
+            }
+        } 
     }
     free(g); // 그래프 g 해제
 }
